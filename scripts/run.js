@@ -1,28 +1,46 @@
 const main = async () => {
-  const nftContractFactory = await hre.ethers.getContractFactory("MyEpicNFT");
-  const nftContract = await nftContractFactory.deploy();
-  await nftContract.deployed();
-  console.log("Contract deployed to:", nftContract.address);
+  const [owner, randomPerson] = await ethers.getSigners();
+  const waveContractFactory = await hre.ethers.getContractFactory("WavePortal");
+  const waveContract = await waveContractFactory.deploy({
+    value: hre.ethers.utils.parseEther("1"),
+  });
+  await waveContract.deployed();
+  console.log("Contract deployed to:", waveContract.address);
+  console.log("Contract deployed by:", owner.address);
 
-  // Call the function.
-  let txn = await nftContract.makeAnEpicNFT();
-  // Wait for it to be mined.
-  await txn.wait();
+  let contractBalance = await hre.ethers.provider.getBalance(
+    waveContract.address
+  );
+  console.log(
+    "Contract balance: ",
+    hre.ethers.utils.formatEther(contractBalance)
+  );
 
-  // Mint another NFT for fun.
-  txn = await nftContract.makeAnEpicNFT();
-  // Wait for it to be mined.
-  await txn.wait();
+  let waveTxn = await waveContract.wave("A wild message appears!");
+  await waveTxn.wait();
+
+  waveTxn = await waveContract.wave("Another wild message appears!");
+  await waveTxn.wait();
+
+  let allWaves = await waveContract.getAllWaves();
+
+  let waveCount = await waveContract.getTotalWaves();
+
+  console.log(
+    "The total number of waves is " + waveCount + " and their details are: "
+  );
+  console.log(allWaves);
+
+  contractBalance = await hre.ethers.provider.getBalance(waveContract.address);
+  console.log(
+    "Contract balance: ",
+    hre.ethers.utils.formatEther(contractBalance)
+  );
 };
 
-const runMain = async () => {
-  try {
-    await main();
-    process.exit(0);
-  } catch (error) {
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
     console.log(error);
     process.exit(1);
-  }
-};
-
-runMain();
+  });
